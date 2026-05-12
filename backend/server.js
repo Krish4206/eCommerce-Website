@@ -20,6 +20,7 @@ import adminRoutes from "./routes/v1/adminRoutes.js";
 import wishlistRoutes from "./routes/v1/wishlistRoutes.js";
 import reviewRoutes from "./routes/v1/reviewRoutes.js";
 import couponRoutes from "./routes/v1/couponRoutes.js";
+import seedRoutes from "./routes/v1/seedRoute.js";
 
 // Load environment variables
 dotenv.config();
@@ -75,6 +76,7 @@ app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/wishlist", wishlistRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/coupons", couponRoutes);
+app.use("/api/v1/seed", seedRoutes);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
