@@ -55,7 +55,9 @@ const Register = () => {
         toast.success("Account created successfully!");
         navigate("/");
       })
-      .catch(() => {});
+      .catch((err) => {
+        toast.error(err || "Registration failed");
+      });
   };
 
   return (
@@ -117,7 +119,7 @@ const Register = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Min. 8 characters"
+                  placeholder="Min. 8 characters (Upper + Lower + Number)"
                   required
                   minLength={8}
                 />
@@ -142,8 +144,8 @@ const Register = () => {
             <div className="terms-checkbox">
               <input type="checkbox" id="terms" required />
               <label htmlFor="terms">
-                I agree to the <a href="#">Terms of Service</a> and{" "}
-                <a href="#">Privacy Policy</a>
+                I agree to the <Link to="/terms">Terms of Service</Link> and{" "}
+                <Link to="/privacy-policy">Privacy Policy</Link>
               </label>
             </div>
 

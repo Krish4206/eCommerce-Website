@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -34,14 +34,21 @@ const Products = () => {
     maxPrice: "",
     sort: "newest",
   });
+  const [appliedFilters, setAppliedFilters] = useState({
+    search: searchParams.get("search") || "",
+    category: searchParams.get("category") || "",
+    minPrice: "",
+    maxPrice: "",
+    sort: "newest",
+  });
   const [viewMode, setViewMode] = useState("grid");
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const activeCount = [
-    localFilters.search,
-    localFilters.category,
-    localFilters.minPrice,
-    localFilters.maxPrice,
+    appliedFilters.search,
+    appliedFilters.category,
+    appliedFilters.minPrice,
+    appliedFilters.maxPrice,
   ].filter(Boolean).length;
 
   useEffect(() => {
@@ -53,41 +60,53 @@ const Products = () => {
       getProducts({
         page: pagination.page,
         limit: pagination.limit,
-        ...localFilters,
-        sortBy: localFilters.sort,
+        ...appliedFilters,
+        sortBy: appliedFilters.sort,
       }),
     );
-  }, [dispatch, pagination.page, pagination.limit, localFilters]);
+  }, [dispatch, pagination.page, pagination.limit, appliedFilters]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setLocalFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const apply = () => {
+  const apply = useCallback(() => {
+    setAppliedFilters({ ...localFilters });
     dispatch(setPage(1));
     const p = new URLSearchParams();
     if (localFilters.search) p.set("search", localFilters.search);
     if (localFilters.category) p.set("category", localFilters.category);
     setSearchParams(p);
     setMobileOpen(false);
+  }, [localFilters, dispatch, setSearchParams]);
+
+  // Apply on Enter key
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      apply();
+    }
   };
 
   const clearAll = () => {
-    setLocalFilters({
+    const cleared = {
       search: "",
       category: "",
       minPrice: "",
       maxPrice: "",
       sort: "newest",
-    });
+    };
+    setLocalFilters(cleared);
+    setAppliedFilters(cleared);
     dispatch(setPage(1));
     setSearchParams({});
     setMobileOpen(false);
   };
 
   const removeTag = (key) => {
-    setLocalFilters((prev) => ({ ...prev, [key]: "" }));
+    const updated = { ...localFilters, [key]: "" };
+    setLocalFilters(updated);
+    setAppliedFilters(updated);
   };
 
   const goPage = (p) => {
@@ -158,6 +177,7 @@ const Products = () => {
             placeholder="What are you looking for?"
             value={localFilters.search}
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
           />
         </div>
       </div>
@@ -170,10 +190,11 @@ const Products = () => {
         </div>
         <div className="category-options">
           <button
-            className={`category-option ${!localFilters.category ? "active" : ""}`}
-            onClick={() =>
-              handleChange({ target: { name: "category", value: "" } })
-            }
+            className={`category-option ${!appliedFilters.category ? "active" : ""}`}
+            onClick={() => {
+              handleChange({ target: { name: "category", value: "" } });
+              setTimeout(() => apply(), 0);
+            }}
           >
             <span className="category-dot" />
             All Categories
@@ -182,10 +203,11 @@ const Products = () => {
           {catCategories.map((cat) => (
             <button
               key={cat.name}
-              className={`category-option ${localFilters.category === cat.name ? "active" : ""}`}
-              onClick={() =>
-                handleChange({ target: { name: "category", value: cat.name } })
-              }
+              className={`category-option ${appliedFilters.category === cat.name ? "active" : ""}`}
+              onClick={() => {
+                handleChange({ target: { name: "category", value: cat.name } });
+                setTimeout(() => apply(), 0);
+              }}
             >
               <span className="category-dot" />
               {cat.name}
@@ -210,6 +232,7 @@ const Products = () => {
               placeholder="Min"
               value={localFilters.minPrice}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
             />
           </div>
           <span className="price-dash">—</span>
@@ -221,21 +244,9 @@ const Products = () => {
               placeholder="Max"
               value={localFilters.maxPrice}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
             />
           </div>
-        </div>
-        <div className="price-bar">
-          <div
-            className="price-bar-fill"
-            style={{
-              left: localFilters.minPrice
-                ? `${Math.min((localFilters.minPrice / 1000) * 100, 50)}%`
-                : "0%",
-              right: localFilters.maxPrice
-                ? `${100 - Math.min((localFilters.maxPrice / 1000) * 100, 100)}%`
-                : "0%",
-            }}
-          />
         </div>
       </div>
 
@@ -246,7 +257,20 @@ const Products = () => {
           <FaChevronDown />
         </div>
         <div className="filter-select-wrap">
-          <select name="sort" value={localFilters.sort} onChange={handleChange}>
+          <select
+            name="sort"
+            value={localFilters.sort}
+            onChange={(e) => {
+              handleChange(e);
+              setTimeout(() => {
+                setAppliedFilters((prev) => ({
+                  ...prev,
+                  sort: e.target.value,
+                }));
+                dispatch(setPage(1));
+              }, 0);
+            }}
+          >
             <option value="newest">Newest First</option>
             <option value="price-low">Price: Low to High</option>
             <option value="price-high">Price: High to Low</option>
@@ -258,32 +282,35 @@ const Products = () => {
       {/* Active tags */}
       {activeCount > 0 && (
         <div className="active-tags">
-          {localFilters.search && (
+          {appliedFilters.search && (
             <span className="active-tag">
-              “{localFilters.search}”
+              “{appliedFilters.search}”
               <button onClick={() => removeTag("search")}>
                 <FaTimes />
               </button>
             </span>
           )}
-          {localFilters.category && (
+          {appliedFilters.category && (
             <span className="active-tag">
-              {localFilters.category}
+              {appliedFilters.category}
               <button onClick={() => removeTag("category")}>
                 <FaTimes />
               </button>
             </span>
           )}
-          {(localFilters.minPrice || localFilters.maxPrice) && (
+          {(appliedFilters.minPrice || appliedFilters.maxPrice) && (
             <span className="active-tag">
-              ₹{localFilters.minPrice || "0"}–₹{localFilters.maxPrice || "∞"}
+              ₹{appliedFilters.minPrice || "0"}–₹
+              {appliedFilters.maxPrice || "∞"}
               <button
                 onClick={() => {
-                  setLocalFilters((prev) => ({
-                    ...prev,
+                  const updated = {
+                    ...localFilters,
                     minPrice: "",
                     maxPrice: "",
-                  }));
+                  };
+                  setLocalFilters(updated);
+                  setAppliedFilters(updated);
                 }}
               >
                 <FaTimes />
