@@ -1,5 +1,6 @@
 import express from "express";
 import { Product } from "../../models/Product.js";
+import { User } from "../../models/User.js";
 import { logger } from "../../utils/logger.js";
 
 const router = express.Router();
@@ -8,7 +9,7 @@ const FASHION_PRODUCTS = [
   {
     name: "Classic Fit Premium Polo T-Shirt",
     description:
-      "Premium cotton polo t-shirt with a modern fit. Features a button-down collar, ribbed cuffs, and a comfortable breathable fabric perfect for both casual and semi-formal occasions.",
+      "Premium cotton polo t-shirt. Button-down collar, ribbed cuffs. Perfect for casual wear.",
     mrp: 1999,
     price: 799,
     discount: 60,
@@ -25,7 +26,6 @@ const FASHION_PRODUCTS = [
     colors: [
       { name: "Black", code: "#1a1a2e" },
       { name: "White", code: "#f8f9fa" },
-      { name: "Navy", code: "#1e3a5f" },
     ],
     ratings: 4.5,
     numReviews: 234,
@@ -35,7 +35,7 @@ const FASHION_PRODUCTS = [
   {
     name: "Slim Fit Stretchable Denim Jeans",
     description:
-      "Modern slim fit jeans with advanced 4-way stretch technology. Comfortable, durable denim that moves with you throughout the day.",
+      "Modern slim fit jeans with 4-way stretch. Comfortable denim that moves with you.",
     mrp: 2999,
     price: 1299,
     discount: 57,
@@ -61,7 +61,7 @@ const FASHION_PRODUCTS = [
   {
     name: "Floral Print Summer Dress",
     description:
-      "Beautiful floral print sundress made from lightweight, breathable fabric. Perfect for summer days and evening outings.",
+      "Beautiful floral sundress. Lightweight, breathable fabric for summer days.",
     mrp: 2499,
     price: 999,
     discount: 60,
@@ -87,7 +87,7 @@ const FASHION_PRODUCTS = [
   {
     name: "Premium Leather Handbag",
     description:
-      "Genuine leather handbag with gold-tone hardware. Features multiple compartments, a detachable shoulder strap, and a secure zip closure.",
+      "Genuine leather handbag with gold-tone hardware. Multiple compartments.",
     mrp: 4999,
     price: 2499,
     discount: 50,
@@ -113,12 +113,12 @@ const FASHION_PRODUCTS = [
   {
     name: "Wireless Noise-Cancelling Headphones",
     description:
-      "Premium wireless headphones with active noise cancellation, 30-hour battery life, and crystal-clear sound quality.",
+      "Premium wireless headphones with active noise cancellation, 30-hour battery.",
     mrp: 12999,
     price: 5499,
     discount: 58,
     brand: "SoundWave",
-    category: "Electronics",
+    category: "Accessories",
     sizes: ["One Size"],
     stock: 90,
     images: [
@@ -134,17 +134,16 @@ const FASHION_PRODUCTS = [
     ratings: 4.6,
     numReviews: 567,
     isFeatured: true,
-    isBestseller: false,
   },
   {
     name: "Smart Fitness Tracker Watch",
     description:
-      "Advanced fitness tracker with heart rate monitoring, SpO2 tracking, GPS, sleep analysis, and 14-day battery life.",
+      "Advanced fitness tracker, heart rate monitoring, GPS, 14-day battery.",
     mrp: 7999,
     price: 2999,
     discount: 63,
     brand: "TechFit",
-    category: "Electronics",
+    category: "Accessories",
     sizes: ["S", "M", "L"],
     stock: 200,
     images: [
@@ -159,13 +158,12 @@ const FASHION_PRODUCTS = [
     ],
     ratings: 4.4,
     numReviews: 789,
-    isFeatured: false,
     isBestseller: true,
   },
   {
     name: "Organic Cotton Baby Bodysuit Set",
     description:
-      "Set of 5 organic cotton bodysuits for babies. Ultra-soft, hypoallergenic, and gentle on sensitive skin. Snap closures for easy changing.",
+      "Set of 5 organic cotton bodysuits. Ultra-soft, hypoallergenic.",
     mrp: 1499,
     price: 599,
     discount: 60,
@@ -186,41 +184,14 @@ const FASHION_PRODUCTS = [
     isBestseller: true,
   },
   {
-    name: "Stainless Steel Water Bottle",
-    description:
-      "Double-wall vacuum insulated water bottle. Keeps drinks cold for 24 hours or hot for 12. BPA-free, leak-proof, and eco-friendly.",
-    mrp: 1999,
-    price: 799,
-    discount: 60,
-    brand: "EcoPure",
-    category: "Home & Garden",
-    sizes: ["500ml", "750ml", "1L"],
-    stock: 500,
-    images: [
-      {
-        url: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400",
-        public_id: "p8",
-      },
-    ],
-    colors: [
-      { name: "Stainless", code: "#c0c0c0" },
-      { name: "Matte Black", code: "#2d2d2d" },
-      { name: "Ocean Blue", code: "#2563eb" },
-    ],
-    ratings: 4.7,
-    numReviews: 654,
-    isFeatured: true,
-    isBestseller: false,
-  },
-  {
     name: "Pro Running Shoes",
     description:
-      "Lightweight performance running shoes with responsive cushioning, breathable mesh upper, and durable rubber outsole.",
+      "Lightweight performance running shoes. Responsive cushioning, breathable mesh.",
     mrp: 6999,
     price: 3499,
     discount: 50,
     brand: "SportFlex",
-    category: "Sports",
+    category: "Footwear",
     sizes: ["7", "8", "9", "10", "11", "12"],
     stock: 150,
     images: [
@@ -239,32 +210,34 @@ const FASHION_PRODUCTS = [
     isBestseller: true,
   },
   {
-    name: "Vitamin C Brightening Serum",
+    name: "Casual Canvas Sneakers",
     description:
-      "Professional-grade vitamin C serum with hyaluronic acid and vitamin E. Brightens skin, reduces dark spots, and boosts collagen.",
-    mrp: 1499,
-    price: 699,
-    discount: 53,
-    brand: "GlowLab",
-    category: "Beauty",
-    sizes: ["30ml", "50ml"],
-    stock: 350,
+      "Classic canvas sneakers. Comfortable for everyday wear, durable sole.",
+    mrp: 1999,
+    price: 899,
+    discount: 55,
+    brand: "UrbanStep",
+    category: "Footwear",
+    sizes: ["7", "8", "9", "10", "11"],
+    stock: 200,
     images: [
       {
-        url: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400",
-        public_id: "p10",
+        url: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400",
+        public_id: "p15",
       },
     ],
-    colors: [],
-    ratings: 4.6,
-    numReviews: 876,
-    isFeatured: true,
+    colors: [
+      { name: "White", code: "#FFFFFF" },
+      { name: "Black", code: "#1a1a2e" },
+    ],
+    ratings: 4.3,
+    numReviews: 321,
     isBestseller: true,
   },
   {
     name: "Classic Aviator Sunglasses",
     description:
-      "Timeless aviator sunglasses with UV400 protection. Gold-tone frame with gradient lenses. Lightweight and comfortable for all-day wear.",
+      "Timeless aviator sunglasses. UV400 protection, gold-tone frame.",
     mrp: 2999,
     price: 999,
     discount: 67,
@@ -284,13 +257,12 @@ const FASHION_PRODUCTS = [
     ],
     ratings: 4.3,
     numReviews: 345,
-    isFeatured: false,
     isBestseller: true,
   },
   {
     name: "Knit Cashmere Blend Sweater",
     description:
-      "Luxurious cashmere-blend knit sweater. Incredibly soft, warm, and perfect for layering during colder months.",
+      "Luxurious cashmere-blend knit sweater. Soft, warm, perfect for layering.",
     mrp: 3999,
     price: 1799,
     discount: 55,
@@ -307,17 +279,15 @@ const FASHION_PRODUCTS = [
     colors: [
       { name: "Charcoal", code: "#36454F" },
       { name: "Camel", code: "#C19A6B" },
-      { name: "Burgundy", code: "#800020" },
     ],
     ratings: 4.4,
     numReviews: 234,
     isFeatured: true,
-    isBestseller: false,
   },
   {
     name: "Yoga Mat Premium Non-Slip",
     description:
-      "Extra thick 6mm yoga mat with alignment lines. Non-slip surface, eco-friendly TPE material, includes carrying strap.",
+      "Extra thick 6mm yoga mat with alignment lines. Eco-friendly TPE material.",
     mrp: 2499,
     price: 999,
     discount: 60,
@@ -337,60 +307,58 @@ const FASHION_PRODUCTS = [
     ],
     ratings: 4.8,
     numReviews: 567,
-    isFeatured: false,
     isBestseller: true,
   },
   {
-    name: "Set of 6 Ceramic Dinner Plates",
+    name: "Cotton Linen Blend Kurta Set",
     description:
-      "Elegant ceramic dinner plate set. Microwave and dishwasher safe. Classic design that complements any table setting.",
-    mrp: 3999,
-    price: 1799,
-    discount: 55,
-    brand: "HomeElegance",
-    category: "Home & Garden",
-    sizes: ["Set of 6"],
-    stock: 120,
+      "Traditional kurta set in cotton-linen blend. Comfortable ethnic wear.",
+    mrp: 2999,
+    price: 1299,
+    discount: 57,
+    brand: "EthnicVibe",
+    category: "Women",
+    sizes: ["S", "M", "L", "XL"],
+    stock: 85,
     images: [
       {
-        url: "https://images.unsplash.com/photo-1516387938699-a93567ec168e?w=400",
+        url: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400",
         public_id: "p14",
       },
     ],
     colors: [
-      { name: "White", code: "#FFFFFF" },
-      { name: "Ivory", code: "#FFFFF0" },
+      { name: "Mint Green", code: "#98FB98" },
+      { name: "Coral", code: "#FF7F50" },
     ],
-    ratings: 4.5,
-    numReviews: 432,
-    isFeatured: false,
-    isBestseller: false,
+    ratings: 4.6,
+    numReviews: 198,
+    isFeatured: true,
+    isBestseller: true,
   },
   {
-    name: "Kids Educational Tablet",
+    name: "Minimalist Leather Wallet",
     description:
-      "Children's learning tablet with pre-loaded educational games, e-books, and parental controls. Durable kid-proof design.",
-    mrp: 5999,
-    price: 2499,
-    discount: 58,
-    brand: "KiddoTech",
-    category: "Kids",
+      "Slim RFID-blocking leather wallet. 6 card slots, bill compartment.",
+    mrp: 1999,
+    price: 799,
+    discount: 60,
+    brand: "LuxeCraft",
+    category: "Accessories",
     sizes: ["One Size"],
-    stock: 85,
+    stock: 350,
     images: [
       {
-        url: "https://images.unsplash.com/photo-1587691592099-24045742e181?w=400",
-        public_id: "p15",
+        url: "https://images.unsplash.com/photo-1627123424574-724758594e93?w=400",
+        public_id: "p16",
       },
     ],
     colors: [
-      { name: "Blue", code: "#2563eb" },
-      { name: "Pink", code: "#ec4899" },
+      { name: "Brown", code: "#8B4513" },
+      { name: "Black", code: "#1a1a2e" },
     ],
-    ratings: 4.2,
-    numReviews: 198,
-    isFeatured: false,
-    isBestseller: false,
+    ratings: 4.5,
+    numReviews: 654,
+    isBestseller: true,
   },
 ];
 
@@ -405,7 +373,22 @@ router.post("/seed", async (req, res) => {
       });
     }
 
-    const products = await Product.insertMany(FASHION_PRODUCTS);
+    // Find admin user for createdBy field
+    const admin = await User.findOne({ role: "admin" });
+    if (!admin) {
+      return res.status(400).json({
+        status: false,
+        message: "No admin user found. Create an admin user first.",
+      });
+    }
+
+    const productsWithAdmin = FASHION_PRODUCTS.map((p) => ({
+      ...p,
+      createdBy: admin._id,
+      mrp: p.mrp || Math.round(p.price * 2),
+    }));
+
+    const products = await Product.insertMany(productsWithAdmin);
     logger.info(`Seeded ${products.length} products`);
     res.json({
       status: true,
