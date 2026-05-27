@@ -148,6 +148,7 @@ export const createProduct = async (req, res, next) => {
       colors,
       stock,
       slug,
+      images,
     } = req.body;
 
     // Validate required fields
@@ -181,12 +182,13 @@ export const createProduct = async (req, res, next) => {
       sizes: sizes ? JSON.parse(sizes) : [],
       colors: colors ? JSON.parse(colors) : [],
       createdBy: req.user.id,
-      images: req.files
-        ? req.files.map((file) => ({
-            url: file.path,
-            public_id: file.filename,
-          }))
-        : [],
+      images:
+        req.files && req.files.length > 0
+          ? req.files.map((file) => ({
+              url: file.path,
+              public_id: file.filename,
+            }))
+          : images || [],
     };
 
     const product = await Product.create(productData);
