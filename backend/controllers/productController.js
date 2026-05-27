@@ -1,19 +1,19 @@
-import { Product } from '../models/Product.js';
-import { APIError } from '../middleware/errorHandler.js';
+import { Product } from "../models/Product.js";
+import { APIError } from "../middleware/errorHandler.js";
 
 // Get featured products (highest rated)
 export const getFeaturedProducts = async (req, res, next) => {
   try {
     const products = await Product.find({ stock: { $gt: 0 } })
-      .select('-createdBy')
+      .select("-createdBy")
       .sort({ ratings: -1 })
       .limit(8)
       .lean();
 
     res.status(200).json({
       status: true,
-      message: 'Featured products retrieved successfully',
-      data: { products }
+      message: "Featured products retrieved successfully",
+      data: { products },
     });
   } catch (error) {
     next(error);
@@ -23,33 +23,33 @@ export const getFeaturedProducts = async (req, res, next) => {
 // Get all products with filtering, searching, and pagination
 export const getAllProducts = async (req, res, next) => {
   try {
-    const { 
-      search, 
-      category, 
-      brand, 
-      minPrice, 
-      maxPrice, 
-      sortBy, 
-      page = 1, 
-      limit = 12 
+    const {
+      search,
+      category,
+      brand,
+      minPrice,
+      maxPrice,
+      sortBy,
+      page = 1,
+      limit = 12,
     } = req.query;
 
     // Build filter object
     const filter = {};
-    
+
     if (search) {
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
       ];
     }
 
     if (category) {
-      filter.category = { $regex: category, $options: 'i' };
+      filter.category = { $regex: category, $options: "i" };
     }
 
     if (brand) {
-      filter.brand = { $regex: brand, $options: 'i' };
+      filter.brand = { $regex: brand, $options: "i" };
     }
 
     if (minPrice || maxPrice) {
@@ -61,16 +61,16 @@ export const getAllProducts = async (req, res, next) => {
     // Handle sorting
     let sortOptions = {};
     switch (sortBy) {
-      case 'price-low':
+      case "price-low":
         sortOptions = { price: 1 };
         break;
-      case 'price-high':
+      case "price-high":
         sortOptions = { price: -1 };
         break;
-      case 'newest':
+      case "newest":
         sortOptions = { createdAt: -1 };
         break;
-      case 'rating':
+      case "rating":
         sortOptions = { ratings: -1 };
         break;
       default:
@@ -87,7 +87,7 @@ export const getAllProducts = async (req, res, next) => {
 
     // Fetch products
     const products = await Product.find(filter)
-      .select('-createdBy')
+      .select("-createdBy")
       .sort(sortOptions)
       .skip(skip)
       .limit(limitNum)
@@ -95,16 +95,16 @@ export const getAllProducts = async (req, res, next) => {
 
     res.status(200).json({
       status: true,
-      message: 'Products retrieved successfully',
+      message: "Products retrieved successfully",
       data: {
         products,
         pagination: {
           total,
           page: pageNum,
           limit: limitNum,
-          pages: Math.ceil(total / limitNum)
-        }
-      }
+          pages: Math.ceil(total / limitNum),
+        },
+      },
     });
   } catch (error) {
     next(error);
@@ -117,17 +117,17 @@ export const getProductById = async (req, res, next) => {
     const { id } = req.params;
 
     const product = await Product.findById(id)
-      .select('-createdBy')
-      .populate('createdBy', 'name email role');
+      .select("-createdBy")
+      .populate("createdBy", "name email role");
 
     if (!product) {
-      throw new APIError('Product not found', 404);
+      throw new APIError("Product not found", 404);
     }
 
     res.status(200).json({
       status: true,
-      message: 'Product retrieved successfully',
-      data: { product }
+      message: "Product retrieved successfully",
+      data: { product },
     });
   } catch (error) {
     next(error);
@@ -137,17 +137,35 @@ export const getProductById = async (req, res, next) => {
 // Create product (admin only)
 export const createProduct = async (req, res, next) => {
   try {
-    const { name, description, price, discount, brand, category, sizes, colors, stock } = req.body;
+    const {
+      name,
+      description,
+      price,
+      discount,
+      brand,
+      category,
+      sizes,
+      colors,
+      stock,
+      slug,
+    } = req.body;
 
     // Validate required fields
-    if (!name || !description || !price || !brand || !category || stock === undefined) {
-      throw new APIError('Please provide all required fields', 400);
+    if (
+      !name ||
+      !description ||
+      !price ||
+      !brand ||
+      !category ||
+      stock === undefined
+    ) {
+      throw new APIError("Please provide all required fields", 400);
     }
 
     // Check if product name already exists (optional)
     const existingProduct = await Product.findOne({ name });
     if (existingProduct) {
-      throw new APIError('Product with this name already exists', 409);
+      throw new APIError("Product with this name already exists", 409);
     }
 
     // Create product object
@@ -159,21 +177,24 @@ export const createProduct = async (req, res, next) => {
       brand,
       category,
       stock: Number(stock),
+      slug: slug || undefined,
       sizes: sizes ? JSON.parse(sizes) : [],
       colors: colors ? JSON.parse(colors) : [],
       createdBy: req.user.id,
-      images: req.files ? req.files.map(file => ({
-        url: file.path,
-        public_id: file.filename
-      })) : []
+      images: req.files
+        ? req.files.map((file) => ({
+            url: file.path,
+            public_id: file.filename,
+          }))
+        : [],
     };
 
     const product = await Product.create(productData);
 
     res.status(201).json({
       status: true,
-      message: 'Product created successfully',
-      data: { product }
+      message: "Product created successfully",
+      data: { product },
     });
   } catch (error) {
     next(error);
@@ -184,11 +205,21 @@ export const createProduct = async (req, res, next) => {
 export const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, description, price, discount, brand, category, sizes, colors, stock } = req.body;
+    const {
+      name,
+      description,
+      price,
+      discount,
+      brand,
+      category,
+      sizes,
+      colors,
+      stock,
+    } = req.body;
 
     const product = await Product.findById(id);
     if (!product) {
-      throw new APIError('Product not found', 404);
+      throw new APIError("Product not found", 404);
     }
 
     // Update fields
@@ -204,9 +235,9 @@ export const updateProduct = async (req, res, next) => {
 
     // Handle image uploads
     if (req.files && req.files.length > 0) {
-      product.images = req.files.map(file => ({
+      product.images = req.files.map((file) => ({
         url: file.path,
-        public_id: file.filename
+        public_id: file.filename,
       }));
     }
 
@@ -214,8 +245,8 @@ export const updateProduct = async (req, res, next) => {
 
     res.status(200).json({
       status: true,
-      message: 'Product updated successfully',
-      data: { product }
+      message: "Product updated successfully",
+      data: { product },
     });
   } catch (error) {
     next(error);
@@ -229,13 +260,13 @@ export const deleteProduct = async (req, res, next) => {
 
     const product = await Product.findByIdAndDelete(id);
     if (!product) {
-      throw new APIError('Product not found', 404);
+      throw new APIError("Product not found", 404);
     }
 
     res.status(200).json({
       status: true,
-      message: 'Product deleted successfully',
-      data: { product }
+      message: "Product deleted successfully",
+      data: { product },
     });
   } catch (error) {
     next(error);
@@ -252,30 +283,30 @@ export const getProductsByCategory = async (req, res, next) => {
     const limitNum = Math.min(100, Math.max(1, Number(limit)));
     const skip = (pageNum - 1) * limitNum;
 
-    const total = await Product.countDocuments({ 
-      category: { $regex: category, $options: 'i' } 
+    const total = await Product.countDocuments({
+      category: { $regex: category, $options: "i" },
     });
 
-    const products = await Product.find({ 
-      category: { $regex: category, $options: 'i' } 
+    const products = await Product.find({
+      category: { $regex: category, $options: "i" },
     })
-      .select('-createdBy')
+      .select("-createdBy")
       .skip(skip)
       .limit(limitNum)
       .lean();
 
     res.status(200).json({
       status: true,
-      message: 'Category products retrieved successfully',
+      message: "Category products retrieved successfully",
       data: {
         products,
         pagination: {
           total,
           page: pageNum,
           limit: limitNum,
-          pages: Math.ceil(total / limitNum)
-        }
-      }
+          pages: Math.ceil(total / limitNum),
+        },
+      },
     });
   } catch (error) {
     next(error);
@@ -285,12 +316,12 @@ export const getProductsByCategory = async (req, res, next) => {
 // Get all categories
 export const getAllCategories = async (req, res, next) => {
   try {
-    const categories = await Product.distinct('category');
+    const categories = await Product.distinct("category");
 
     res.status(200).json({
       status: true,
-      message: 'Categories retrieved successfully',
-      data: { categories }
+      message: "Categories retrieved successfully",
+      data: { categories },
     });
   } catch (error) {
     next(error);
@@ -300,12 +331,12 @@ export const getAllCategories = async (req, res, next) => {
 // Get all brands
 export const getAllBrands = async (req, res, next) => {
   try {
-    const brands = await Product.distinct('brand');
+    const brands = await Product.distinct("brand");
 
     res.status(200).json({
       status: true,
-      message: 'Brands retrieved successfully',
-      data: { brands }
+      message: "Brands retrieved successfully",
+      data: { brands },
     });
   } catch (error) {
     next(error);

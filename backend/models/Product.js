@@ -30,6 +30,10 @@ const productSchema = new mongoose.Schema(
       required: [true, "Please provide price"],
       min: 0,
     },
+    mrp: {
+      type: Number,
+      min: 0,
+    },
     discount: {
       type: Number,
       default: 0,
@@ -217,6 +221,30 @@ const productSchema = new mongoose.Schema(
     toObject: { getters: true },
   },
 );
+
+// Auto-generate slug from name before saving
+productSchema.pre("save", async function (next) {
+  if (!this.isModified("name")) return next();
+
+  if (!this.slug || this.isModified("name")) {
+    let baseSlug = this.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+      .substring(0, 80);
+
+    // Check if slug already exists
+    let slug = baseSlug;
+    let counter = 1;
+    const Product = mongoose.model("Product");
+    while (await Product.findOne({ slug, _id: { $ne: this._id } })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    this.slug = slug;
+  }
+  next();
+});
 
 // Indexes for better query performance
 productSchema.index({ name: "text", description: "text", brand: "text" });
